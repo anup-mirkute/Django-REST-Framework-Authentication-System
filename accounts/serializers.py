@@ -38,21 +38,21 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
             email=validated_data['email']
         )
         user.set_password(validated_data['password'])
-        # user.is_active = False
+        user.is_active = False
         user.save()
         return user
     
     
 
 
-class UserLoginSerializer(serializers.ModelSerializer):
-    username = serializers.CharField(required=False)
-    email = serializers.EmailField(required=False)
-    password = serializers.CharField(write_only=True)
+class UserLoginSerializer(serializers.Serializer):
+    username_or_email = serializers.CharField(required=True)
+    # email = serializers.EmailField(required=False)
+    password = serializers.CharField(write_only=True, required=True)
 
     class Meta:
-        model = User
-        fields = ['username', 'email', 'password']
-        extra_kwargs={
-            'password': {'write_only':True}
-        }
+        # model = User
+        fields = ['username_or_email', 'password']
+        # extra_kwargs={
+        #     'password': {'write_only':True}
+        # }

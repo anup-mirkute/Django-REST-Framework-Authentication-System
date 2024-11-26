@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>Email Verification</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        margin: 0;
+        padding: 0;
+      }
+      .header {
+        background-color: #007bff;
+        color: #fff;
+        padding: 20px;
+        text-align: center;
+      }
+      .content {
+        padding: 20px;
+      }
+      .button {
+        background-color: #007bff;
+        color: #fff;
+        display: inline-block;
+        font-size: 16px;
+        font-weight: bold;
+        margin: 20px 0;
+        padding: 10px 20px;
+        text-align: center;
+        text-decoration: none;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="header">
+      <h1>Verify your email</h1>
+    </div>
+    <div class="content">
+      <p>Hi <strong>{{ user }},</strong></p>
+      <p>Thanks for joining Expenses!<br>
+			   Please click the below button to verify your email address.
+      </p>
+      <a href="{{ token }}" class="button" style="color : #fff;">Verify Email</a>
+    </div>
+  </body>
+</html>
