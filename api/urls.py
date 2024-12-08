@@ -7,10 +7,13 @@ urlpatterns = [
 
     #   accounts
     path('signup', RegistrationView.as_view(), name='signup'),
-    path('login', LoginView.as_view(), name='login'),
-    path('logout', LogoutView.as_view(), name='logout'),
     path('verify-mail/<uidb64>/<token>/', verifyMail, name="verify-mail"),
 
+    path('login', LoginView.as_view(), name='login'),
+    path('logout', LogoutView.as_view(), name='logout'),
+
+    path('forget-password', ForgetPasswordRequestView.as_view(), name="forget-password-request"),
+    path('forget-password/<uidb64>/<token>/', ForgetPasswordResetView.as_view(), name="forget-password-reset"),
 
 
 

@@ -56,3 +56,20 @@ class UserLoginSerializer(serializers.Serializer):
         # extra_kwargs={
         #     'password': {'write_only':True}
         # }
+
+
+class ForgetPasswordRequestSerializer(serializers.Serializer):
+    email = serializers.EmailField(required=True)
+
+    class Meta:
+        fields = ['email']
+
+
+class ForgetPasswordResetSerializer(serializers.Serializer):
+    new_password = serializers.CharField(write_only=True, required=True)
+    re_new_password = serializers.CharField(write_only=True, required=True)
+    token = serializers.CharField(write_only=True, required=True)
+    uidb64 = serializers.CharField(write_only=True, required=True)
+
+    class Meta:
+        fields = ['new_password', 're_new_password', 'token', 'uidb64']

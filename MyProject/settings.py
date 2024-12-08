@@ -199,3 +199,15 @@ EMAIL_PORT = config('EMAIL_PORT')
 EMAIL_USE_TLS = config('EMAIL_USE_TLS')
 EMAIL_HOST_USER = config('EMAIL_HOST_USER')
 EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD')
+
+
+# Secure cookies and sessions
+SESSION_COOKIE_SECURE = True  # Only allow cookies to be sent over HTTPS
+SESSION_COOKIE_HTTPONLY = True  # JavaScript can't access cookies
+SESSION_COOKIE_SAMESITE = 'Strict'  # Prevent cross-site request forgery
+
+
+# Security
+SECURE_BROWSER_XSS_FILTER = True  # Prevent XSS
+SECURE_CONTENT_TYPE_NOSNIFF = True  # Prevent MIME-type sniffing
+X_FRAME_OPTIONS = 'DENY'  # Clickjacking prevention
