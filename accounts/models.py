@@ -1,4 +1,7 @@
 import datetime
+import random
+from django.utils import timezone
+
 from django.db import models
 from django.contrib.auth.models import AbstractUser
 from django.utils.translation import gettext_lazy as _
@@ -55,3 +58,34 @@ class User(AbstractUser):
         verbose_name = _("User")
         verbose_name_plural = _("Users")
         ordering = ["-date_joined"]
+
+
+class LoginOTP(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE)
+    code = models.CharField(max_length=6, blank=True)
+    ip_address = models.GenericIPAddressField()
+    validated = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def save(self, *args, **kwargs):
+        if not self.code:
+            self.code = ''.join([str(random.randint(0, 9)) for _ in range(6)])
+        super().save(*args, **kwargs)
+
+    def regenerate(self, ip_address):
+        self.code = ''.join([str(random.randint(0, 9)) for _ in range(6)])
+        self.ip_address = ip_address
+        self.created_at = timezone.now()
+        self.save()
+
+    def is_valid(self):
+        if not self.validated:
+            return self.created_at > timezone.now() - datetime.timedelta(minutes=10)
+        else:
+            return False
+        
+    class Meta:
+        db_table = 'accounts"."user_loggedin_otp'
+        indexes = [
+            models.Index(fields=['user']),
+        ]

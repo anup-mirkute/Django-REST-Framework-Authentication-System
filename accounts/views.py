@@ -1,6 +1,7 @@
 from datetime import timedelta
 
 from rest_framework import status
+from rest_framework.decorators import api_view
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import RefreshToken
@@ -14,12 +15,15 @@ from django.views.decorators.csrf import csrf_exempt
 
 from django.core.exceptions import ObjectDoesNotExist, ValidationError
 
+from django.shortcuts import get_object_or_404
+
 from django.utils import timezone
 from django.utils.http import urlsafe_base64_decode
 from django.utils.encoding import force_str
 from django.utils.timezone import now
 from django.utils.translation import gettext_lazy as _
 
+from .models import LoginOTP
 from .serializers import *
 from api.renderers import ResponseRenderer
 from helper.Generator import generate_token
@@ -119,6 +123,66 @@ class LoginView(APIView):
                 return Response({"error": _("Invalid credentials")}, status=status.HTTP_404_NOT_FOUND)
 
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+
+class OTPLoginRequestView(APIView):
+    renderer_classes = [ResponseRenderer]
+
+    def post(self, request):
+        serializer = OTPLoginRequestSerializer(data=request.data)
+
+        if serializer.is_valid(raise_exception=True):
+            username_or_email = serializer.validated_data.get('username_or_email')
+            ip_address = serializer.validated_data.get('ip_address')
+
+            email_pattern = r'^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$'
+            identifier = "Email" if re.match(email_pattern, username_or_email) else "Username"
+
+            try : 
+                user = None
+                if identifier == 'Email':
+                    user = User.objects.get(email=username_or_email)
+                elif identifier == 'Username':
+                    user = User.objects.get(username=username_or_email)
+
+                otp, created = LoginOTP.objects.get_or_create(user=user, ip_address=ip_address)
+                if not created:
+                    otp.regenerate(ip_address)
+
+                subject = 'Login with OTP'
+                page = 'login_with_otp.html'
+                mail = EmailSender(subject, [user.email], user=user.username, template_name=page, otp=otp.code)
+                mail.sending_mail()
+            except User.DoesNotExist:
+                pass
+            except Exception as e:
+                return Response({"error" : _("Something went wrong")}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        
+        return Response({"message": _("If the email exists, a otp has been send to register email")}, status=status.HTTP_200_OK)
+
+
+class OTPLoginVerifyView(APIView):
+    renderer_classes = [ResponseRenderer]
+
+    def post(self, request):
+        serializer = OTPLoginVerifySerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        
+        user_id = serializer.validated_data.get('user_id')
+        otp_code = serializer.validated_data.get('otp_code')
+        ip_address = serializer.validated_data.get('ip_address')
+        
+        user = get_object_or_404(User, pk=user_id)
+        
+        otp = LoginOTP.objects.filter(user=user, code=otp_code, ip_address=ip_address).first()
+        if otp and otp.is_valid():
+            token = get_tokens_for_user(user)
+            return Response({
+                "message": "Login Successfully",
+                "token": token,
+            }, status=status.HTTP_200_OK)
+        
+        return Response({"message": "Invalid OTP or IP address"}, status=status.HTTP_400_BAD_REQUEST)
 
 
 class LogoutView(APIView):
@@ -192,3 +256,12 @@ class ForgetPasswordResetView(APIView):
                 return Response({"message" : _("Password changed successfully")}, status=status.HTTP_200_OK)
             else:
                 return Response({"error": _("Invalid or expired link")}, status=status.HTTP_400_BAD_REQUEST)
+            
+
+@api_view(['POST'])
+def is_username_exist(request):
+    username = request.data.get('username')
+    if User.objects.filter(username=username).exists():
+        return Response({'message': 'Username already exists'}, status=400)
+    
+    return Response({'message': 'Username is available'}, status=200)

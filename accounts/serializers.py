@@ -40,9 +40,7 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
         user.set_password(validated_data['password'])
         user.is_active = False
         user.save()
-        return user
-    
-    
+        return user    
 
 
 class UserLoginSerializer(serializers.Serializer):
@@ -56,6 +54,23 @@ class UserLoginSerializer(serializers.Serializer):
         # extra_kwargs={
         #     'password': {'write_only':True}
         # }
+
+
+class OTPLoginRequestSerializer(serializers.Serializer):
+    username_or_email = serializers.CharField(required=True)
+    ip_address = serializers.IPAddressField()
+
+    class Meta:
+        fields = ['username_or_email', 'ip_address']
+
+
+class OTPLoginVerifySerializer(serializers.Serializer):
+    user_id = serializers.CharField(required=True)
+    otp_code = serializers.CharField(required=True, max_length=6) 
+    ip_address = serializers.IPAddressField()
+
+    class Meta:
+        fields = ['user_id', 'otp_code', 'ip_address']
 
 
 class ForgetPasswordRequestSerializer(serializers.Serializer):

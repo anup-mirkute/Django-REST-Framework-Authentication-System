@@ -16,5 +16,8 @@ urlpatterns = [
     path('forget-password/<uidb64>/<token>/', ForgetPasswordResetView.as_view(), name="forget-password-reset"),
 
 
+    path('check-username/', is_username_exist, name='is_username_exist'),
+
+
 
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
